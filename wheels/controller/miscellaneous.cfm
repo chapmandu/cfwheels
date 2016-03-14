@@ -8,14 +8,16 @@
 	<cfargument name="layout" type="any" required="false">
 	<cfargument name="file" type="string" required="false" default="">
 	<cfargument name="detectMultipart" type="boolean" required="false">
-	<cfargument name="$deliver" type="boolean" required="false" default="true">
+	<cfargument name="deliver" type="boolean" required="false" default="true">
+	<cfargument name="destination" type="string" required="false" default="">
 	<cfscript>
 		var loc = {};
+		loc.deliver = Duplicate(arguments.deliver);
+		loc.rv = "";
 		$args(args=arguments, name="sendEmail", combine="template/templates/!,layout/layouts,file/files", required="template,from,to,subject");
 
-		loc.nonPassThruArgs = "template,templates,layout,layouts,file,files,detectMultipart,$deliver";
+		loc.nonPassThruArgs = "template,templates,layout,layouts,file,files,detectMultipart,deliver,destination";
 		loc.mailTagArgs = "from,to,bcc,cc,charset,debug,failto,group,groupcasesensitive,mailerid,mailparams,maxrows,mimeattach,password,port,priority,query,replyto,server,spoolenable,startrow,subject,timeout,type,username,useSSL,useTLS,wraptext,remove";
-		loc.deliver = arguments.$deliver;
 
 		// if two templates but only one layout was passed in we set the same layout to be used on both
 		if (ListLen(arguments.template) > 1 && ListLen(arguments.layout) == 1)
@@ -69,6 +71,8 @@
 		if (ArrayLen(arguments.mailparts) == 1)
 		{
 			arguments.tagContent = arguments.mailparts[1].tagContent;
+			// return the email content as a string
+			loc.rv = arguments.tagContent;
 			StructDelete(arguments, "mailparts");
 			if (arguments.detectMultipart && !StructKeyExists(arguments, "type"))
 			{
@@ -80,6 +84,15 @@
 				{
 					arguments.type = "text";
 				}
+			}
+		}
+		else
+		{
+			// return multipart email content as an array
+			loc.rv = [];
+			loc.iEnd = ArrayLen(arguments.mailparts);
+			for (loc.i=1; loc.i <= loc.iEnd; loc.i++) {
+				loc.rv[loc.i] = arguments.mailparts[loc.i].tagContent;
 			}
 		}
 
@@ -109,19 +122,27 @@
 			StructDelete(arguments, loc.item);
 		}
 
+		// write the email body to file
+		if (Len(arguments.destination))
+		{
+			if (IsArray(loc.rv))
+			{
+				loc.output = ArrayToList(loc.rv, "#Chr(13)##Chr(10)#");
+			}
+			else
+			{
+				loc.output = loc.rv;
+			}
+			$file(action="write" file="#arguments.destination#" output="#loc.output#");
+		}
+
 		// send the email using the cfmail tag
 		if (loc.deliver)
 		{
 			$mail(argumentCollection=arguments);
 		}
-		else
-		{
-			loc.rv = arguments;
-		}
 	</cfscript>
-	<cfif StructKeyExists(loc, "rv")>
-		<cfreturn loc.rv>
-	</cfif>
+	<cfreturn loc.rv>
 </cffunction>
 
 <cffunction name="sendFile" returntype="any" access="public" output="false">
@@ -137,7 +158,7 @@
 		$args(name="sendFile", args=arguments);
 
 		// Check whether the resource is a ram resource or physical file
-		if(!listFirst(arguments.file, "://") EQ "ram"){ 
+		if(!listFirst(arguments.file, "://") EQ "ram"){
 			loc.relativeRoot = get("rootPath");
 			if (Right(loc.relativeRoot, 1) != "/")
 			{
@@ -187,7 +208,7 @@
 			}
 			// Make the default display name behaviour the same as physical files
 			loc.name     = replace(arguments.file, "ram://","","one");
-		} 
+		}
 
 		loc.extension = ListLast(loc.file, ".");
 
