@@ -66,8 +66,16 @@
 		variables.$instance.contentFor = {};
 
 		// include controller specific helper files if they exist, cache the file check for performance reasons
-		loc.template = get("viewPath") & "/" & LCase(arguments.name) & "/helpers.cfm";
+		loc.template = get("viewPath") & "/" & LCase(ListChangeDelims(arguments.name, '/', '.')) & "/helpers.cfm";
 		loc.helperFileExists = false;
+
+		if (IsDefined("request.foo")) {
+			dump("$initControllerObject")
+			dump(arguments);
+			dump(loc.template);
+			// abort;
+		}
+
 		if (!ListFindNoCase(application.wheels.existingHelperFiles, arguments.name) && !ListFindNoCase(application.wheels.nonExistingHelperFiles, arguments.name))
 		{
 			if (FileExists(ExpandPath(loc.template)))

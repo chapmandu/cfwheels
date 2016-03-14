@@ -10,15 +10,23 @@
 		<cfset params = {controller="test", action="helperCaller"}>
 		<cfset loc.controller = controller("test", params)>
 	</cffunction>
-	
+
 	<cffunction name="test_inclusion_of_global_helper_file">
 		<cfset loc.controller.renderPage()>
 		<cfset assert("StructKeyExists(request.test, 'globalHelperFunctionWasCalled')")>
 	</cffunction>
-	
+
 	<cffunction name="test_inclusion_of_controller_helper_file">
 		<cfset loc.controller.renderPage()>
 		<cfset assert("StructKeyExists(request.test, 'controllerHelperFunctionWasCalled')")>
+	</cffunction>
+
+	<cffunction name="test_inclusion_of_controller_helper_file_in_subdirectory">
+		<cfset request.foo = true>
+		<cfset params = {controller="foo.bar", action="helperCaller"}>
+		<cfset loc.controller = controller("foo.Bar", params)>
+		<cfset loc.controller.renderPage()>
+		<cfset assert("StructKeyExists(request.test, 'controllerSubdirectoryHelperFunctionWasCalled')")>
 	</cffunction>
 
 	<cffunction name="teardown">

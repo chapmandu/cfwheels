@@ -372,7 +372,7 @@
                         <cfsavecontent variable="tagContext">
                         	<ul>
                         		<cfloop from="1" to="#ArrayLen(cfcatch.tagContext)#" index="i">
-                        			<li>#ListLast(cfcatch.tagContext[i].template, "/")# line #cfcatch.tagContext[i].line#</li>
+                        			<li>#cfcatch.tagContext[i].template# line #cfcatch.tagContext[i].line#</li>
                         		</cfloop>
                         	</ul>
                         </cfsavecontent>

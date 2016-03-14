@@ -401,7 +401,7 @@
 		}
 
 		// filter out illegal characters from the controller and action arguments
-		loc.rv.controller = ReReplace(loc.rv.controller, "[^0-9A-Za-z-_]", "", "all");
+		loc.rv.controller = ReReplace(loc.rv.controller, "[^0-9A-Za-z-_.]", "", "all");
 		loc.rv.action = ReReplace(loc.rv.action, "[^0-9A-Za-z-_\.]", "", "all");
 
 		// convert controller to upperCamelCase and action to normal camelCase

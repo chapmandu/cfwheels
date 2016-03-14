@@ -149,7 +149,7 @@
 		var loc = {};
 		if (!Len(arguments.$template))
 		{
-			arguments.$template = "/" & arguments.$controller & "/" & arguments.$action;
+			arguments.$template = "/" & ListChangeDelims(arguments.$controller, '/', '.') & "/" & arguments.$action;
 		}
 		arguments.$type = "page";
 		arguments.$name = arguments.$template;
@@ -286,12 +286,12 @@
 		else if (Find("/", arguments.$name))
 		{
 			// include a file in a sub folder of the current controller
-			loc.rv &= "/" & arguments.$controllerName & "/" & loc.folderName & "/" & loc.fileName;
+			loc.rv &= "/" & ListChangeDelims(arguments.$controllerName, '/', '.') & "/" & loc.folderName & "/" & loc.fileName;
 		}
 		else
 		{
 			// include a file in the current controller's view folder
-			loc.rv &= "/" & arguments.$controllerName & "/" & loc.fileName;
+			loc.rv &= "/" & ListChangeDelims(arguments.$controllerName, '/', '.') & "/" & loc.fileName;
 		}
 		loc.rv = LCase(loc.rv);
 	</cfscript>

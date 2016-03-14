@@ -119,10 +119,10 @@
 	<cfargument name="action" type="string" required="true">
 	<cfscript>
 		var loc = {};
+
 		if (Left(arguments.action, 1) == "$" || ListFindNoCase(application.wheels.protectedControllerMethods, arguments.action))
-		{
 			$throw(type="Wheels.ActionNotAllowed", message="You are not allowed to execute the `#arguments.action#` method as an action.", extendedInfo="Make sure your action does not have the same name as any of the built-in CFWheels functions.");
-		}
+
 		if (StructKeyExists(this, arguments.action) && IsCustomFunction(this[arguments.action]))
 		{
 			$invoke(method=arguments.action);
@@ -134,6 +134,7 @@
 			loc.invokeArgs.missingMethodArguments = {};
 			$invoke(method="onMissingMethod", invokeArgs=loc.invokeArgs);
 		}
+
 		if (!$performedRenderOrRedirect())
 		{
 			try
@@ -142,7 +143,7 @@
 			}
 			catch (any e)
 			{
-				loc.file = get("viewPath") & "/" & LCase(variables.$class.name) & "/" & LCase(arguments.action) & ".cfm";
+				loc.file = get("viewPath") & "/" & LCase(ListChangeDelims(variables.$class.name, '/', '.')) & "/" & LCase(arguments.action) & ".cfm";
 				if (FileExists(ExpandPath(loc.file)))
 				{
 					$throw(object=e);
@@ -151,7 +152,7 @@
 				{
 					if (get("showErrorInformation"))
 					{
-						$throw(type="Wheels.ViewNotFound", message="Could not find the view page for the `#arguments.action#` action in the `#variables.$class.name#` controller.", extendedInfo="Create a file named `#LCase(arguments.action)#.cfm` in the `views/#LCase(variables.$class.name)#` directory (create the directory as well if it doesn't already exist).");
+						$throw(type="Wheels.ViewNotFound", message="Could not find the view page for the `#arguments.action#` action in the `#variables.$class.name#` controller.", extendedInfo="Create a file named `#LCase(arguments.action)#.cfm` in the `views/#LCase(ListChangeDelims(variables.$class.name, '/', '.'))#` directory (create the directory as well if it doesn't already exist).");
 					}
 					else
 					{

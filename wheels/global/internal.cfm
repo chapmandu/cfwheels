@@ -572,6 +572,14 @@
 		loc.method = arguments.method;
 		loc.component = ListChangeDelims(arguments.path, ".", "/") & "." & ListChangeDelims(arguments.fileName, ".", "/");
 		loc.argumentCollection = arguments;
+
+		if (IsDefined("request.foo")) {
+			dump("$createObjectFromRoot");
+			dump(arguments);
+			dump(loc);
+			abort;
+		}
+
 	</cfscript>
 	<cfinclude template="../../root.cfm">
 	<cfreturn rv>
@@ -656,12 +664,25 @@
 		loc.rv = capitalize(arguments.type);
 
 		// we are going to store the full controller / model path in the existing / non-existing lists so we can have controllers / models in multiple places
-		loc.fullObjectPath = arguments.objectPath & "/" & arguments.name;
+		loc.fullObjectPath = arguments.objectPath & "/" & ListChangeDelims(arguments.name, '/', '.');
+
+		if (IsDefined("request.foo")) {
+			dump("$createControllerClass");
+			dump(arguments);
+			dump(loc);
+			// abort;
+		}
 
 		if (!ListFindNoCase(application.wheels.existingObjectFiles, loc.fullObjectPath) && !ListFindNoCase(application.wheels.nonExistingObjectFiles, loc.fullObjectPath))
 		{
 			// we have not yet checked if this file exists or not so let's do that here (the function below will return the file name with the correct case if it exists, false if not)
 			loc.file = $fileExistsNoCase(ExpandPath(loc.fullObjectPath & ".cfc"));
+			if (IsDefined("request.foo")) {
+				dump("$objectFileName");
+				dump(arguments);
+				dump(loc);
+				abort;
+			}
 			if (IsBoolean(loc.file) && !loc.file)
 			{
 				// no file exists, let's store that if caching is on so we don't have to check it again
@@ -691,6 +712,12 @@
 				loc.rv = ListLast(ListGetAt(application.wheels.existingObjectFiles, loc.pos), "/");
 			}
 		}
+		if (IsDefined("request.foo")) {
+			dump("$objectFileName");
+			dump(arguments);
+			dump(loc);
+			// abort;
+		}
 	</cfscript>
 	<cfreturn loc.rv>
 </cffunction>
@@ -705,16 +732,42 @@
 		// let's allow for multiple controller paths so that plugins can contain controllers
 		// the last path is the one we will instantiate the base controller on if the controller is not found on any of the paths
 		loc.iEnd = ListLen(arguments.controllerPaths);
+
 		for (loc.i=1; loc.i <= loc.iEnd; loc.i++)
 		{
 			loc.controllerPath = ListGetAt(arguments.controllerPaths, loc.i);
+
+			// if (IsDefined("request.foo")) {
+			// 	dump("$createControllerClass");
+			// 	dump(arguments);
+			// 	dump(loc);
+			// 	abort;
+			// }
+
 			loc.fileName = $objectFileName(name=arguments.name, objectPath=loc.controllerPath, type=arguments.type);
+
+
+
 			if (loc.fileName != "Controller" || loc.i == ListLen(arguments.controllerPaths))
 			{
+
+				// if (IsDefined("request.foo")) {
+				// 	dump("$createControllerClass");
+				// 	dump(arguments);
+				// 	dump(loc);
+				// 	// abort;
+				// }
+
 				application.wheels.controllers[arguments.name] = $createObjectFromRoot(path=loc.controllerPath, fileName=loc.fileName, method="$initControllerClass", name=arguments.name);
 				loc.rv = application.wheels.controllers[arguments.name];
 				break;
 			}
+		}
+		if (IsDefined("request.foo")) {
+			dump("$createControllerClass");
+			dump(arguments);
+			dump(loc);
+			abort;
 		}
 	</cfscript>
 	<cfreturn loc.rv>
