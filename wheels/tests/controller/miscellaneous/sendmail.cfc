@@ -8,14 +8,14 @@
 		<cfset args.subject = "dummy subject">
 		<cfset args.to = "to-dummy@dummy.com">
 		<cfset args.from = "from-dummy@dummy.com">
-		<cfset args.$deliver = false>
+		<cfset args.deliver = false>
 		<cfset oldViewPath = application.wheels.viewPath>
 		<cfset application.wheels.viewPath = "wheels/tests/_assets/views">
 		<cfset oldFilePath = application.wheels.filePath>
 		<cfset application.wheels.filePath = "wheels/tests/_assets/files">
 		<cfset oldArgs = application.wheels.functions.sendEmail>
 	</cffunction>
-	
+
  	<cffunction name="test_allow_default_for_from_to_and_subject">
 		<cfset application.wheels.functions.sendEmail.from = "sender@example.com">
 		<cfset application.wheels.functions.sendEmail.to = "recipient@example.com">
@@ -33,7 +33,12 @@
 	<cffunction name="test_send_plain">
 		<cfset args.template = "plainEmailTemplate">
 		<cfset result = loc.controller.sendEmail(argumentCollection=args)>
-		<cfset assert("ListLen(StructKeyList(result)) IS 5 AND StructKeyExists(result, 'to') AND StructKeyExists(result, 'from') AND StructKeyExists(result, 'subject') AND result.type IS 'text' AND result.tagContent IS 'dummy plain email body'")>
+		<cfset assert("ListLen(StructKeyList(result)) IS 5")>
+		<cfset assert("StructKeyExists(result, 'to')")>
+		<cfset assert("StructKeyExists(result, 'from')")>
+		<cfset assert("StructKeyExists(result, 'subject')")>
+		<cfset assert("result.type IS 'text'")>
+		<cfset assert("result.tagContent IS 'dummy plain email body'")>
 	</cffunction>
 
 	<cffunction name="test_send_html">
@@ -95,7 +100,7 @@
 		<cfset application.wheels.filePath = oldFilePath>
 		<cfset application.wheels.functions.sendEmail = oldArgs>
 	</cffunction>
-	
+
 	<cffunction name="default_args">
 		<cfset $args(args=arguments, name="sendEmail", required="template,from,to,subject")>
 		<cfreturn arguments>

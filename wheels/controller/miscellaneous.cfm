@@ -9,14 +9,15 @@
 	<cfargument name="file" type="string" required="false" default="">
 	<cfargument name="detectMultipart" type="boolean" required="false">
 	<cfargument name="deliver" type="boolean" required="false" default="true">
-	<cfargument name="destination" type="string" required="false" default="">
+	<cfargument name="writeToFile" type="string" required="false" default="">
 	<cfscript>
 		var loc = {};
 		loc.deliver = Duplicate(arguments.deliver);
-		loc.rv = "";
+		loc.writeToFile = Duplicate(arguments.writeToFile);
+
 		$args(args=arguments, name="sendEmail", combine="template/templates/!,layout/layouts,file/files", required="template,from,to,subject");
 
-		loc.nonPassThruArgs = "template,templates,layout,layouts,file,files,detectMultipart,deliver,destination";
+		loc.nonPassThruArgs = "writetofile,template,templates,layout,layouts,file,files,detectMultipart,deliver";
 		loc.mailTagArgs = "from,to,bcc,cc,charset,debug,failto,group,groupcasesensitive,mailerid,mailparams,maxrows,mimeattach,password,port,priority,query,replyto,server,spoolenable,startrow,subject,timeout,type,username,useSSL,useTLS,wraptext,remove";
 
 		// if two templates but only one layout was passed in we set the same layout to be used on both
@@ -67,12 +68,14 @@
 			}
 		}
 
+		// return a struct containing mailpart content using type as the key
+		loc.rv = {};
+		loc.rv["html"] = "";
+		loc.rv["text"] = "";
 		// figure out if the email should be sent as html or text when only one template is used and the developer did not specify the type explicitly
 		if (ArrayLen(arguments.mailparts) == 1)
 		{
 			arguments.tagContent = arguments.mailparts[1].tagContent;
-			// return the email content as a string
-			loc.rv = arguments.tagContent;
 			StructDelete(arguments, "mailparts");
 			if (arguments.detectMultipart && !StructKeyExists(arguments, "type"))
 			{
@@ -84,15 +87,20 @@
 				{
 					arguments.type = "text";
 				}
+				loc.rv[arguments.type] = arguments.tagContent;
+			}
+			else
+			{
+				// if detectMultipart= is false i can only assume the type
+				loc.rv["html"] = arguments.tagContent;
 			}
 		}
 		else
 		{
-			// return multipart email content as an array
-			loc.rv = [];
+			// return a struct containing mailparts using type the the key
 			loc.iEnd = ArrayLen(arguments.mailparts);
 			for (loc.i=1; loc.i <= loc.iEnd; loc.i++) {
-				loc.rv[loc.i] = arguments.mailparts[loc.i].tagContent;
+				loc.rv[arguments.mailparts[loc.i].type] = arguments.mailparts[loc.i].tagContent;
 			}
 		}
 
@@ -122,18 +130,14 @@
 			StructDelete(arguments, loc.item);
 		}
 
+		// also the args passed to cfmail
+		StructAppend(loc.rv, arguments);
+
 		// write the email body to file
-		if (Len(arguments.destination))
+		if (Len(loc.writeToFile))
 		{
-			if (IsArray(loc.rv))
-			{
-				loc.output = ArrayToList(loc.rv, "#Chr(13)##Chr(10)#");
-			}
-			else
-			{
-				loc.output = loc.rv;
-			}
-			$file(action="write" file="#arguments.destination#" output="#loc.output#");
+			loc.output = ListAppend(loc.rv.text, loc.rv.html, "#Chr(13)##Chr(10)#");
+			$file(action="write", file="#loc.writeToFile#", output="#loc.output#");
 		}
 
 		// send the email using the cfmail tag
