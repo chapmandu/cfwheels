@@ -17,7 +17,7 @@
 
 		$args(args=arguments, name="sendEmail", combine="template/templates/!,layout/layouts,file/files", required="template,from,to,subject");
 
-		loc.nonPassThruArgs = "writetofile,template,templates,layout,layouts,file,files,detectMultipart,deliver";
+		loc.nonPassThruArgs = "writetofile,template,templates,layout,layouts,file,files,detectMultipart,deliver,tagContent";
 		loc.mailTagArgs = "from,to,bcc,cc,charset,debug,failto,group,groupcasesensitive,mailerid,mailparams,maxrows,mimeattach,password,port,priority,query,replyto,server,spoolenable,startrow,subject,timeout,type,username,useSSL,useTLS,wraptext,remove";
 
 		// if two templates but only one layout was passed in we set the same layout to be used on both
@@ -81,17 +81,17 @@
 			{
 				if (Find("<", arguments.tagContent) && Find(">", arguments.tagContent))
 				{
-					arguments.type = "html";
+					loc.rv["html"] = arguments.tagContent;
 				}
 				else
 				{
-					arguments.type = "text";
+					loc.rv["text"] = arguments.tagContent;
 				}
-				loc.rv[arguments.type] = arguments.tagContent;
+
 			}
 			else
 			{
-				// if detectMultipart= is false i can only assume the type
+				// if detectMultipart is false i can only assume the type
 				loc.rv["html"] = arguments.tagContent;
 			}
 		}
@@ -130,13 +130,13 @@
 			StructDelete(arguments, loc.item);
 		}
 
-		// also the args passed to cfmail
+		// also return the args passed to cfmail
 		StructAppend(loc.rv, arguments);
 
 		// write the email body to file
 		if (Len(loc.writeToFile))
 		{
-			loc.output = ListAppend(loc.rv.text, loc.rv.html, "#Chr(13)##Chr(10)#");
+			loc.output = ListAppend(loc.rv.text, loc.rv.html, "#Chr(13)##Chr(10)##Chr(13)##Chr(10)#");
 			$file(action="write", file="#loc.writeToFile#", output="#loc.output#");
 		}
 
